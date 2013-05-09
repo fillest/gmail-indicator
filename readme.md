@@ -1,7 +1,11 @@
 # Gmail Indicator
-A desktop application that shows unread inbox messages number in Ubuntu indicator panel 
+A desktop application that shows Gmail inbox unread message number in Ubuntu indicator panel.
 
-## Ho to run
+It supports multiple accounts.
+
+It's tested currently only in Ubuntu with Unity. Please fork and make pull requests if you want to add support for other environments.
+
+## How to run
 `python gmail-indicator.py name1 passwd1 name2 passwd2`
 
 ## Issues

@@ -20,7 +20,7 @@ def fetch_unread_num (user, password):
 
 def parse_args ():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-i', '--interval', type = int, default = 7, help = "Check interval in seconds")
+	parser.add_argument('-i', '--interval', type = int, default = 7, help = "Interval of checks in seconds")
 	parser.add_argument('credentials', nargs = '+', help = "E.g. name1 passwd1 name2 passwd2")
 	return parser.parse_args()
 
@@ -45,7 +45,7 @@ def run ():
 
 	def check_mail (once):
 		label = []
-		for user, pwd in zip(*[iter(args.credentials)]*2):
+		for user, pwd in zip(*[iter(args.credentials)] * 2):
 			label.append(fetch_unread_num(user, pwd))
 		ind.set_label(", ".join(label))
 		
