@@ -166,7 +166,7 @@ def run ():
 				time.sleep(args.interval)
 		except:
 			log.error("Unexpected error while in check loop:\n%s" % traceback.format_exc())
-			gtk.main_quit()
+			gobject.idle_add(gtk.main_quit)
 
 	thr = threading.Thread(target = check_mail_loop)
 	thr.daemon = True #TODO
