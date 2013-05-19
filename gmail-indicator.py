@@ -78,7 +78,8 @@ def show_menu (status_icon, button, activate_time, entries):
 		item.connect('activate', on_menu_entry_click, link)
 		menu.append(item)
 
-	menu.append(gtk.SeparatorMenuItem())
+	if entries:
+		menu.append(gtk.SeparatorMenuItem())
 	quit = gtk.ImageMenuItem(stock_id = gtk.STOCK_QUIT)
 	quit.connect('activate', lambda w: gtk.main_quit())
 	menu.append(quit)
