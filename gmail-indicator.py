@@ -149,24 +149,27 @@ def run ():
 					# print "done"
 					#TODO optionally show notification if got a new message
 					def update_icon ():
-						# print len(recent_unread_entries)
-						del recent_unread_entries[:] #TODO lock?
-						recent_unread_entries.extend(entries)
+						try:
+							recent_unread_entries[:] = entries
 
-						cr.set_operator(cairo.OPERATOR_CLEAR)
-						cr.paint()
-						cr.set_operator(cairo.OPERATOR_SOURCE)
-						cr.move_to(0, 16)
-						cr.show_text(str(total_num))
-						trayPixbuf.get_from_drawable(pixmap, pixmap.get_colormap(), 0, 0, 0, 0, traySize, traySize)
-						p = trayPixbuf.add_alpha(True, 0x00, 0x00, 0x00)
-						status_icon.set_from_pixbuf(p)
+							cr.set_operator(cairo.OPERATOR_CLEAR)
+							cr.paint()
+							cr.set_operator(cairo.OPERATOR_SOURCE)
+							cr.move_to(0, 16)
+							cr.show_text(str(total_num))
+							trayPixbuf.get_from_drawable(pixmap, pixmap.get_colormap(), 0, 0, 0, 0, traySize, traySize)
+							p = trayPixbuf.add_alpha(True, 0x00, 0x00, 0x00)
+							status_icon.set_from_pixbuf(p)
+						except:
+							#exception doesn't break gtk loop here
+							gtk.main_quit()
+							raise
 					gobject.idle_add(update_icon)		
 
 				time.sleep(args.interval)
 		except:
-			log.error("Unexpected error while in check loop:\n%s" % traceback.format_exc())
 			gobject.idle_add(gtk.main_quit)
+			raise
 
 	thr = threading.Thread(target = check_mail_loop)
 	thr.daemon = True #TODO
