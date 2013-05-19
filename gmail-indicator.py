@@ -124,8 +124,8 @@ def run ():
 	cr.set_operator(cairo.OPERATOR_SOURCE)
 	cr.set_source_rgba(1, 1, 1, 1)
 	cr.set_font_size(15)
-	cr.move_to(0, 16)
-	cr.show_text("...")
+	# cr.move_to(0, 16)
+	# cr.show_text("...")
 	# cr.move_to(0, 16)
 	# cr.show_text("2")
 	trayPixbuf.get_from_drawable(pixmap, pixmap.get_colormap(), 0, 0, 0, 0, traySize, traySize)
@@ -153,7 +153,9 @@ def run ():
 						del recent_unread_entries[:] #TODO lock?
 						recent_unread_entries.extend(entries)
 
-						trayPixbuf.fill(0xffffffff)
+						cr.set_operator(cairo.OPERATOR_CLEAR)
+						cr.paint()
+						cr.set_operator(cairo.OPERATOR_SOURCE)
 						cr.move_to(0, 16)
 						cr.show_text(str(total_num))
 						trayPixbuf.get_from_drawable(pixmap, pixmap.get_colormap(), 0, 0, 0, 0, traySize, traySize)
