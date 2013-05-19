@@ -6,9 +6,9 @@
 
 ![screenshot](http://s.fillest.ru/published/gmail-indicator.png)
 
-Tested currently only on Linux (Ubuntu). Please fork and make pull requests if you want to add support for other environments.
+Tested currently only on Linux (Ubuntu). Please test, fork and make pull requests if you want to add support for other environments.
 
-Written in Python with no external dependencies beside GTK and Cairo.
+Written in Python with no external dependencies beside GTK/Cairo.
 
 ## Running
 `python gmail-indicator.py yourusername yourpassword`
