@@ -68,7 +68,7 @@ def fetch_recent_unread_entries (user, password):
 
 def on_menu_entry_click (_widget, url):
 	# print url
-	webbrowser.open(url)
+	threading.Thread(target = lambda: webbrowser.open(url)).start()
 
 def show_menu (status_icon, button, activate_time, entries):
 	menu = gtk.Menu()
