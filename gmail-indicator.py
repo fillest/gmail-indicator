@@ -176,11 +176,7 @@ def run ():
 	thr.daemon = True #TODO
 	thr.start()
 
-	try:
-		gtk.main()
-	except KeyboardInterrupt:
-		# pass
-		raise
+	gtk.main()
 
 
 if __name__ == '__main__':
