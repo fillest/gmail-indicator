@@ -122,11 +122,8 @@ def run ():
 	# cr.select_font_face("Georgia", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
 	cr.set_operator(cairo.OPERATOR_SOURCE)
 	cr.set_source_rgba(1, 1, 1, 1)
-	cr.set_font_size(15)
-	# cr.move_to(0, 16)
-	# cr.show_text("...")
-	# cr.move_to(0, 16)
-	# cr.show_text("2")
+	font_size = 15
+	cr.set_font_size(font_size)
 	trayPixbuf.get_from_drawable(pixmap, pixmap.get_colormap(), 0, 0, 0, 0, traySize, traySize)
 	trayPixbuf = trayPixbuf.add_alpha(True, 0x00, 0x00, 0x00)
 	# trayPixbuf = trayPixbuf.add_alpha(True, 0xFF, 0xFF, 0xFF)
@@ -136,17 +133,18 @@ def run ():
 
 	def check_mail_loop ():
 		try:
+			total_num = None
 			while True:
-				# print "start"
+				# print "fetch start"
+				failed = False
 				try:
 					total_num, entries = fetch_recent_unread_entries(args.username, args.password)
 				except FetchError:
-					# if not ind.get_label().endswith("?"):
-					# 	ind.set_label(ind.get_label() + "?")
+					failed = True
 					pass
-				else:
-					# print "done"
-					#TODO optionally show notification if got a new message
+				# print "fetch done"
+
+				if total_num is not None:
 					def update_icon ():
 						try:
 							recent_unread_entries[:] = entries
@@ -155,7 +153,11 @@ def run ():
 							cr.paint()
 							cr.set_operator(cairo.OPERATOR_SOURCE)
 							cr.move_to(0, 16)
-							cr.show_text(str(total_num))
+							if failed:
+								cr.set_font_size(12)
+							else:
+								cr.set_font_size(font_size)
+							cr.show_text(str(total_num) + ('?' if failed else ''))
 							trayPixbuf.get_from_drawable(pixmap, pixmap.get_colormap(), 0, 0, 0, 0, traySize, traySize)
 							p = trayPixbuf.add_alpha(True, 0x00, 0x00, 0x00)
 							status_icon.set_from_pixbuf(p)
@@ -163,7 +165,8 @@ def run ():
 							#exception doesn't break gtk loop here
 							gtk.main_quit()
 							raise
-					gobject.idle_add(update_icon)		
+					gobject.idle_add(update_icon)
+					#TODO optionally show notification if got a new message
 
 				time.sleep(args.interval)
 		except:
