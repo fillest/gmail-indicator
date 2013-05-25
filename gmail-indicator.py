@@ -36,6 +36,13 @@ def parse_args ():
 class FetchError (Exception):
 	pass
 
+class AuthError (Exception):
+	pass
+
+def raise_fetch_error ():
+	log.warning("Exception while fetching feed:\n%s" % traceback.format_exc())
+	raise FetchError()
+
 def fetch_feed (user, password):
 	#IMAP 'UNSEEN' returns strange number (bigger than expected -- maybe plain msg list, not chains?) so use the feed
 	req = urllib2.Request(GMAIL_FEED_URL)
@@ -43,9 +50,13 @@ def fetch_feed (user, password):
 	try:
 		with contextlib.closing(urllib2.urlopen(req)) as resp:
 			return resp.read()
+	except urllib2.HTTPError as e:
+		if e.code == 401:
+			raise AuthError()
+		else:
+			raise_fetch_error()
 	except:
-		log.warning("Exception during fetching feed:\n%s" % traceback.format_exc())
-		raise FetchError()
+		raise_fetch_error()
 
 def fetch_recent_unread_entries (user, password):
 	data = fetch_feed(user, password)
@@ -141,7 +152,15 @@ def run ():
 					total_num, entries = fetch_recent_unread_entries(args.username, args.password)
 				except FetchError:
 					failed = True
-					pass
+				except AuthError:
+					def show_auth_error ():
+						md = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE,
+							u"Gmail refused to authorize '%s'\nPlease check your credentials spelling" % args.username)
+						md.run()
+						md.destroy()
+						gtk.main_quit()
+					gobject.idle_add(show_auth_error)
+					return
 				# print "fetch done"
 
 				if total_num is not None:
