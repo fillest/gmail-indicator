@@ -43,8 +43,6 @@ def fetch_feed (user, password):
 	try:
 		with contextlib.closing(urllib2.urlopen(req)) as resp:
 			return resp.read()
-	except KeyboardInterrupt:
-		raise
 	except:
 		log.warning("Exception during fetching feed:\n%s" % traceback.format_exc())
 		raise FetchError()
@@ -169,8 +167,9 @@ def run ():
 
 				time.sleep(args.interval)
 		except:
+			log.error("Unexpected exception in check_mail_loop:\n%s" % traceback.format_exc())
 			gobject.idle_add(gtk.main_quit)
-			raise
+			#re-raise here will not cause trace to be printed 
 
 	thr = threading.Thread(target = check_mail_loop)
 	thr.daemon = True #TODO
