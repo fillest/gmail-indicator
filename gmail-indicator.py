@@ -29,6 +29,7 @@ GMAIL_FEED_URL = 'https://mail.google.com/mail/feed/atom/'
 def parse_args ():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-i', '--interval', default = 10, type = int, help = "Interval between checks (in seconds)")
+	parser.add_argument('-ft', '--fetch-thread-timeout', default = 60 * 10, type = int)
 	parser.add_argument('username')
 	parser.add_argument('password')
 	return parser.parse_args()
@@ -144,39 +145,51 @@ def run ():
 
 	def check_mail_loop ():
 		try:
-			total_num = None
+			result = {}
+			result['total_num'] = None
 			while True:
 				# print "fetch start"
-				failed = False
-				try:
-					total_num, entries = fetch_recent_unread_entries(args.username, args.password)
-				except FetchError:
-					failed = True
-				except AuthError:
-					def show_auth_error ():
-						md = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE,
-							u"Gmail refused to authorize '%s'\nPlease check your credentials spelling" % args.username)
-						md.run()
-						md.destroy()
-						gtk.main_quit()
-					gobject.idle_add(show_auth_error)
-					return
-				# print "fetch done"
+				result['failed'] = False
+				def fetch ():
+					try:
+						result['total_num'], result['entries'] = fetch_recent_unread_entries(args.username, args.password)
+					except FetchError:
+						result['failed'] = True
+					except AuthError:
+						def show_auth_error ():
+							md = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE,
+								u"Gmail refused to authorize '%s'\nPlease check your credentials spelling" % args.username)
+							md.run()
+							md.destroy()
+							gtk.main_quit()
+						gobject.idle_add(show_auth_error)
+						return
+					# print "fetch done"
+				#a workaround for stange occasional hanging
+				#http://stackoverflow.com/questions/16772795/urllib2-urlopen-will-hang-forever-despite-of-timeout
+				#another possible method but without windows support http://stackoverflow.com/questions/5565291/detecting-hangs-with-python-urllib2-urlopen/5565757#5565757
+				thr = threading.Thread(target = fetch)
+				# thr.daemon = True #TODO #is inherited?
+				thr.start()
+				thr.join(args.fetch_thread_timeout)
+				if thr.isAlive():
+					log.warning("fetch thread timeout")
+					#TODO it leaks - thread is not killed
 
-				if total_num is not None:
+				if result['total_num'] is not None:
 					def update_icon ():
 						try:
-							recent_unread_entries[:] = entries
+							recent_unread_entries[:] = result['entries']
 
 							cr.set_operator(cairo.OPERATOR_CLEAR)
 							cr.paint()
 							cr.set_operator(cairo.OPERATOR_SOURCE)
 							cr.move_to(0, 16)
-							if failed:
+							if result['failed']:
 								cr.set_font_size(12)
 							else:
 								cr.set_font_size(font_size)
-							cr.show_text(str(total_num) + ('?' if failed else ''))
+							cr.show_text(str(result['total_num']) + ('?' if result['failed'] else ''))
 							trayPixbuf.get_from_drawable(pixmap, pixmap.get_colormap(), 0, 0, 0, 0, traySize, traySize)
 							p = trayPixbuf.add_alpha(True, 0x00, 0x00, 0x00)
 							status_icon.set_from_pixbuf(p)
