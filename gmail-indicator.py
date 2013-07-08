@@ -9,6 +9,9 @@ import webbrowser
 import logging
 import threading
 import time
+import ConfigParser
+import os
+import sys
 import gtk #TODO proper importing
 from gtk import gdk
 import cairo
@@ -30,8 +33,8 @@ def parse_args ():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-i', '--interval', default = 10, type = int, help = "Interval between checks (in seconds)")
 	parser.add_argument('-ft', '--fetch-thread-timeout', default = 60 * 10, type = int)
-	parser.add_argument('username')
-	parser.add_argument('password')
+	parser.add_argument('-c', '--config-path', default = '~/.gmail_indicator.ini')
+	parser.add_argument('email')
 	return parser.parse_args()
 
 class FetchError (Exception):
@@ -102,8 +105,22 @@ def show_menu (status_icon, button, activate_time, entries):
 	# 	item.destroy()
 	# menu.destroy()
 
+def get_password (config_path, email):
+	p = ConfigParser.SafeConfigParser()
+	fpath = os.path.expanduser(config_path)
+	if not p.read(fpath):
+		md = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE,
+			u"Failed to read and parse '%s' file" % fpath)
+		md.run()
+		md.destroy()
+		sys.exit(1)
+
+	return p.get(email, 'password')
+
 def run ():
 	args = parse_args()
+
+	password = get_password(args.config_path, args.email)
 
 	recent_unread_entries = []
 
@@ -121,7 +138,7 @@ def run ():
 	# def t (status_icon, size, _):
 	# 	print size
 	# status_icon.connect('size-changed', t, recent_unread_entries)
-	status_icon.set_tooltip("%s@gmail.com" % args.username)
+	status_icon.set_tooltip(args.email)
 
 	traySize = 24
 	trayPixbuf = gdk.Pixbuf(gdk.COLORSPACE_RGB, True, 8, traySize, traySize)
@@ -152,13 +169,13 @@ def run ():
 				result['failed'] = False
 				def fetch ():
 					try:
-						result['total_num'], result['entries'] = fetch_recent_unread_entries(args.username, args.password)
+						result['total_num'], result['entries'] = fetch_recent_unread_entries(args.email, password)
 					except FetchError:
 						result['failed'] = True
 					except AuthError:
 						def show_auth_error ():
 							md = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE,
-								u"Gmail refused to authorize '%s'\nPlease check your credentials spelling" % args.username)
+								u"Gmail refused to authorize '%s'\nPlease check your credentials spelling" % args.email)
 							md.run()
 							md.destroy()
 							gtk.main_quit()
@@ -211,6 +228,7 @@ def run ():
 	thr.start()
 
 	gtk.main()
+	#TODO sys.exit(1) on all errors
 
 
 if __name__ == '__main__':
