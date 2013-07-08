@@ -6,7 +6,7 @@
 
 ![screenshot](http://s.fillest.ru/published/gmail-indicator.png)
 
-Tested currently only on Linux (Ubuntu). Please test, fork and make pull requests if you want to add support for other environments.
+Tested currently only on Linux (Ubuntu).
 
 Written in Python with no external dependencies beside GTK/Cairo.
 
@@ -29,7 +29,9 @@ python gmail-indicator.py youremail@gmail.com
 Run more instances for your other accounts passing email as argument.
 
 You may also add it to your startup applications:
-`python /home/youruser/path/to/gmail-indicator.py youremail@gmail.com`
+```text
+python /home/youruser/path/to/gmail-indicator.py youremail@gmail.com
+```
 
 
 ## Feedback
