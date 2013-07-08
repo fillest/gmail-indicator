@@ -4,6 +4,7 @@
 * Click the indicator to show menu with latest message titles. Click a message to open it in Gmail in your browser.
 * Run multiple instances for multiple accounts.
 
+Example screenshot:
 ![screenshot](http://s.fillest.ru/published/gmail-indicator.png)
 
 Tested currently only on Linux (Ubuntu).
@@ -29,13 +30,15 @@ python gmail-indicator.py youremail@gmail.com
 Run more instances for your other accounts passing email as argument.
 
 You may also add it to your startup applications:
-```text
+```bash
 python /home/youruser/path/to/gmail-indicator.py youremail@gmail.com
 ```
 
 
 ## Feedback
-Please submit any bugs or feedback to [the issue tracker](https://github.com/fillest/gmail-indicator/issues)
+Please submit any bugs or feedback to [the issue tracker](https://github.com/fillest/gmail-indicator/issues).
+
+Contributions are welcome.
 
 
 ## License
