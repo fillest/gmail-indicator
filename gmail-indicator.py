@@ -151,8 +151,8 @@ def run ():
 	# cr.select_font_face("Georgia", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
 	cr.set_operator(cairo.OPERATOR_SOURCE)
 	cr.set_source_rgba(1, 1, 1, 1)
-	font_size = 15
-	cr.set_font_size(font_size)
+	default_font_size = 15
+	cr.set_font_size(default_font_size)
 	trayPixbuf.get_from_drawable(pixmap, pixmap.get_colormap(), 0, 0, 0, 0, traySize, traySize)
 	trayPixbuf = trayPixbuf.add_alpha(True, 0x00, 0x00, 0x00)
 	# trayPixbuf = trayPixbuf.add_alpha(True, 0xFF, 0xFF, 0xFF)
@@ -205,7 +205,7 @@ def run ():
 							if result['failed']:
 								cr.set_font_size(12)
 							else:
-								cr.set_font_size(font_size)
+								cr.set_font_size(13 if result['total_num'] >= 100 else default_font_size)
 							cr.show_text(str(result['total_num']) + ('?' if result['failed'] else ''))
 							trayPixbuf.get_from_drawable(pixmap, pixmap.get_colormap(), 0, 0, 0, 0, traySize, traySize)
 							p = trayPixbuf.add_alpha(True, 0x00, 0x00, 0x00)
