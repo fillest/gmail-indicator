@@ -1,8 +1,9 @@
 # Gmail Indicator
 
 * A desktop application that shows Gmail inbox unread message number in the notification area.
-* Click the indicator to show menu with latest message titles. Click a message to open it in Gmail in your browser.
-* Run multiple instances for multiple accounts.
+* When new email arrives, the indicator gets highlighted.
+* Click the indicator to show a menu with latest message titles. Click a message to open it in Gmail in your browser.
+* Run multiple program instances for multiple accounts.
 
 Example screenshot:
 ![screenshot](http://s.fillest.ru/published/gmail-indicator.png)

@@ -123,10 +123,12 @@ def run ():
 	password = get_password(args.config_path, args.email)
 
 	recent_unread_entries = []
+	state = {'has_new_messages': True}
 
 	status_icon = gtk.StatusIcon()
 	status_icon.set_from_stock(gtk.STOCK_REFRESH)  #https://developer.gnome.org/gtk3/stable/gtk3-Stock-Items.html
 	status_icon.connect('popup-menu', show_menu, recent_unread_entries)
+	
 	# def test (m, _):
 	# 	menu = gtk.Menu()
 	# 	quit = gtk.MenuItem("Quit")
@@ -150,7 +152,9 @@ def run ():
 	cr = pixmap.cairo_create()
 	# cr.select_font_face("Georgia", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
 	cr.set_operator(cairo.OPERATOR_SOURCE)
-	cr.set_source_rgba(1, 1, 1, 1)
+	color_seen = (1, 1, 1, 1)
+	color_new_messages = (1.0, 0.7, 0, 1)
+	cr.set_source_rgba(*color_seen)
 	default_font_size = 15
 	cr.set_font_size(default_font_size)
 	trayPixbuf.get_from_drawable(pixmap, pixmap.get_colormap(), 0, 0, 0, 0, traySize, traySize)
@@ -160,12 +164,56 @@ def run ():
 	# print status_icon.get_size()
 	# print status_icon.get_geometry()
 
+	def update_icon (result):
+		try:
+			old_entries = set(link for _, _, link in recent_unread_entries)
+			lz = [link for _, _, link in result['entries']]
+			new_entries = set(lz)
+
+			d = new_entries - old_entries
+			if len(d) == len(old_entries): #TODO fails if user reads all last N emails (and so gets N older promoted as "new")
+				state['has_new_messages'] = True
+			else:
+				for i, n in enumerate(reversed(lz)):
+					if n in d:
+						d.remove(n)
+					else:
+						break
+				if d:
+					state['has_new_messages'] = True
+
+			recent_unread_entries[:] = result['entries']
+
+			cr.set_operator(cairo.OPERATOR_CLEAR)
+			cr.paint()
+			cr.set_operator(cairo.OPERATOR_SOURCE)
+			color = color_new_messages if state['has_new_messages'] else color_seen
+			cr.set_source_rgba(*color)
+			cr.move_to(0, 16)
+			if result['failed']:
+				cr.set_font_size(12)
+			else:
+				cr.set_font_size(13 if result['total_num'] >= 100 else default_font_size)
+			cr.show_text(str(result['total_num']) + ('?' if result['failed'] else ''))
+			trayPixbuf.get_from_drawable(pixmap, pixmap.get_colormap(), 0, 0, 0, 0, traySize, traySize)
+			p = trayPixbuf.add_alpha(True, 0x00, 0x00, 0x00)
+			status_icon.set_from_pixbuf(p)
+		except:
+			#exception doesn't break gtk loop here
+			gtk.main_quit()
+			raise
+
+	result = {}
+
+	def set_viewed (*args):
+		state['has_new_messages'] = False
+		gobject.idle_add(update_icon, result)
+	status_icon.connect('popup-menu', set_viewed)
+
 	def check_mail_loop ():
 		try:
-			result = {}
 			result['total_num'] = None
 			while True:
-				# print "fetch start"
 				result['failed'] = False
 				def fetch ():
 					try:
@@ -181,7 +229,6 @@ def run ():
 							gtk.main_quit()
 						gobject.idle_add(show_auth_error)
 						return
-					# print "fetch done"
 				#a workaround for stange occasional hanging
 				#http://stackoverflow.com/questions/16772795/urllib2-urlopen-will-hang-forever-despite-of-timeout
 				#another possible method but without windows support http://stackoverflow.com/questions/5565291/detecting-hangs-with-python-urllib2-urlopen/5565757#5565757
@@ -194,27 +241,7 @@ def run ():
 					#TODO it leaks - thread is not killed
 
 				if result['total_num'] is not None:
-					def update_icon ():
-						try:
-							recent_unread_entries[:] = result['entries']
-
-							cr.set_operator(cairo.OPERATOR_CLEAR)
-							cr.paint()
-							cr.set_operator(cairo.OPERATOR_SOURCE)
-							cr.move_to(0, 16)
-							if result['failed']:
-								cr.set_font_size(12)
-							else:
-								cr.set_font_size(13 if result['total_num'] >= 100 else default_font_size)
-							cr.show_text(str(result['total_num']) + ('?' if result['failed'] else ''))
-							trayPixbuf.get_from_drawable(pixmap, pixmap.get_colormap(), 0, 0, 0, 0, traySize, traySize)
-							p = trayPixbuf.add_alpha(True, 0x00, 0x00, 0x00)
-							status_icon.set_from_pixbuf(p)
-						except:
-							#exception doesn't break gtk loop here
-							gtk.main_quit()
-							raise
-					gobject.idle_add(update_icon)
+					gobject.idle_add(update_icon, result)
 					#TODO optionally show notification if got a new message
 
 				time.sleep(args.interval)
