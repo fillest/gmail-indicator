@@ -170,17 +170,20 @@ def run ():
 			lz = [link for _, _, link in result['entries']]
 			new_entries = set(lz)
 
-			d = new_entries - old_entries
-			if len(d) == len(old_entries): #TODO fails if user reads all last N emails (and so gets N older promoted as "new")
-				state['has_new_messages'] = True
-			else:
-				for i, n in enumerate(reversed(lz)):
-					if n in d:
-						d.remove(n)
-					else:
-						break
-				if d:
+			if new_entries:
+				diff = new_entries - old_entries
+				if len(diff) == len(old_entries): #TODO fails if user reads all last N emails (and so gets N older promoted as "new")
 					state['has_new_messages'] = True
+				else:
+					for i, n in enumerate(reversed(lz)):
+						if n in diff:
+							diff.remove(n)
+						else:
+							break
+					if diff:
+						state['has_new_messages'] = True
+			else:
+				state['has_new_messages'] = False
 
 			recent_unread_entries[:] = result['entries']
 
